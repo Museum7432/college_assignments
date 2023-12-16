@@ -1,0 +1,7 @@
+src/__pycache__
+indexes/*
+!indexes/.gitkeep
+fever_wiki
+dev*
+checkpoints/*
+!checkpoints/.gitkeep

@@ -1,0 +1,24 @@
+measurements are stored in the csv file (just open it with an arbitrary program like excel or google sheets)
+the actual results (items list) are stored in the dedicated txt file in the folowing format:
+
+path_to_test_file_1
+number_of_items
+values_list
+weights_list
+path_to_test_file_2
+number_of_items
+values_list
+weights_list
+...
+
+
+eg:
+
+tests/kplib/00Uncorrelated/n00050/R01000/s068.kp
+32
+742 941 748 909 266 861 974 362 554 775 782 734 343 606 529 536 524 899 970 590 626 784 124 940 478 752 694 424 384 741 661 938 
+835 764 92 750 261 591 243 376 459 557 760 636 28 101 251 211 350 675 784 70 279 348 291 586 428 538 752 105 253 74 206 333 
+tests/kplib/00Uncorrelated/n00050/R01000/s018.kp
+31
+662 335 480 459 265 254 692 675 788 866 945 735 202 678 874 836 299 976 728 538 594 826 600 478 923 146 684 632 687 481 705 
+535 340 89 148 153 79 649 204 911 630 793 527 133 690 885 479 182 271 702 144 339 302 127 19 572 147 163 739 515 102 771 
