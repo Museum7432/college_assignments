@@ -60,7 +60,13 @@ def get_sample_query():
         "Richard Dawson died on June 2nd, 2012",
         "Hezbollah received accounting training from Iran.",
         "Live Nation Entertainment is a global energy company.",
-        "Fred Seibert only has a career as a gospel record producer."
+        "Fred Seibert only has a career as a gospel record producer.",
+        "The Guardian is a US daily newspaper",
+        "The Guardian newspaper is biased",
+        "Soviet shot down a Korean civilian aircraft in 1978",
+        "Hanoi is the capital of japan",
+        "HaNoi is the capital of Vietnam",
+        "The Theatre Royal in Bath has a capacity of 800"
     ]
 
     st.session_state.claim = random.choice(queries)
