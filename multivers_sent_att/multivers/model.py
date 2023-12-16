@@ -173,6 +173,27 @@ class MultiVerSModel(pl.LightningModule):
         target_embed_size = new_state_dict['embeddings.word_embeddings.weight'].shape[0]
         encoder.resize_token_embeddings(target_embed_size)
         encoder.load_state_dict(new_state_dict)
+        
+        layers_to_train = [
+            "pooler.dense",
+            "encoder.layer.",
+            # "encoder.layer.10",
+            # "encoder.layer.9",
+            # "encoder.layer.8",
+            # "encoder.layer.7",
+            # "encoder.layer.6",
+            # "encoder.layer.5",
+            # "encoder.layer.4",
+            # "encoder.layer.3",
+            # "encoder.layer.2",
+            # "encoder.layer.1",
+        ]
+        
+        for name, param in encoder.named_parameters():
+            if name.startswith(tuple(layers_to_train)):
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
 
         return encoder
 
