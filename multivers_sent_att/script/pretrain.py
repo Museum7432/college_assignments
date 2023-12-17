@@ -47,7 +47,7 @@ def main():
     if n_gpus not in [1, 2, 4, 8]:
         raise ValueError("The number of GPU's must be a power of 2.")
 
-    epochs = 3
+    epochs = 1
     workers_per_gpu = 4  # Number of CPU's per gpu.
     effective_batch_size = 8  # Desired effective batch size.
     accumulate_grad_batches = effective_batch_size // n_gpus
@@ -79,7 +79,7 @@ def main():
         "--scheduler_total_epochs",
         epochs,
         "--train_batch_size",
-        1,
+        2,
         "--eval_batch_size",
         2,
         "--val_check_interval",
@@ -87,7 +87,9 @@ def main():
         "--encoder_name",
         "longformer-large-science",
         "--monitor",
-        "valid_abstract_rationalized_f1"
+        "valid_abstract_rationalized_f1",
+        "--starting_checkpoint",
+        "checkpoints/fever_sci_mod.ckpt"
     ]
 
     # If training on more than 1 gpu, use DDP accelerator.

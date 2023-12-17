@@ -285,13 +285,13 @@ class model_wrapper:
     def __init__(self, checkpoint_path, device ="cuda", tokenizer_name="allenai/longformer-large-4096", strict=True):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
 
-        model = MultiVerSModel.load_from_checkpoint(checkpoint_path=checkpoint_path, map_location=device, strict=strict)
+        model = MultiVerSModel.load_from_checkpoint(checkpoint_path=checkpoint_path, map_location="cpu", strict=strict)
 
         self.device = device
 
-        model.to(device)
         model.eval()
         model.freeze()
+        model.to(device)
         del model.hparams["hparams"].precision  # Don' use 16-bit precision during evaluation.
 
         self.model = model
