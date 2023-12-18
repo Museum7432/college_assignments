@@ -42,7 +42,6 @@ if "selection_table" not in st.session_state:
 if "annotated_res" not in st.session_state:
     st.session_state["annotated_res"] = []
 
-placeholder = st.empty()
 
 def get_sample_query():
     queries = [
@@ -97,7 +96,11 @@ def factcheck_button():
 
     stop = False
 
+    my_bar = st.progress(0, text="test")
+
     for idx, h in enumerate(hits):
+
+        my_bar.progress((idx + 1)/len(hits), str(idx) + "/" + str(len(hits)))
 
         if stop:
             st.session_state.annotated_res.append(sents)
@@ -116,13 +119,11 @@ def factcheck_button():
 
         process_table.loc[idx, "verdict"] = re["predicted_label"]
 
-        # with placeholder.container():
-        placeholder.write(process_table)
 
         if re["predicted_label"] != "NEI" and not st.session_state.check_all:
             stop = True
 
-    placeholder.write("")
+    my_bar.empty()
 
     st.session_state.selection_table = process_table
 

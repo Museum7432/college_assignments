@@ -117,7 +117,7 @@ def main():
     csv_logger = pl_loggers.CSVLogger(
         save_dir=save_dir, name=name, version=version)
 
-    wandb_logger = WandbLogger(project="MNIST")
+    wandb_logger = WandbLogger(project="multivers_sent_att")
 
     loggers = [tb_logger, csv_logger,wandb_logger]
 
