@@ -91,6 +91,17 @@ def parse_args():
     return args
 
 
+from pl.overrides.distributed import LightningDistributedModule
+
+# https://lightning.ai/forums/t/gradient-checkpointing-ddp-nan/398/8
+class CustomDDPPlugin(DDPPlugin):
+    def configure_ddp(self):
+        self.pre_configure_ddp()
+        self._model = self._setup_model(LightningDistributedModule(self.model))
+        self._register_ddp_hooks()
+        self._model._set_static_graph() # THIS IS THE MAGIC LINE
+
+
 def main():
     pl.seed_everything(76)
 
@@ -131,7 +142,7 @@ def main():
 
     # DDP pluging fix to keep training from hanging.
     if args.accelerator == "ddp":
-        plugins = DDPPlugin(find_unused_parameters=True)
+        plugins = CustomDDPPlugin()
     else:
         plugins = None
 
