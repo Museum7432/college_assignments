@@ -143,58 +143,52 @@ class MultiVerSModel(pl.LightningModule):
 
     @staticmethod
     def _get_encoder(hparams):
-        "Start from the Longformer science checkpoint."
-        starting_encoder_name = "allenai/longformer-large-4096"
+        ###############################################################
+        def get_long_pretrained():
+            if os.path.isdir("checkpoints/longformer_science"):
+                return
+            os.makedirs(os.path.dirname("./checkpoints"), exist_ok=True)
+
+            starting_encoder_name = "allenai/longformer-large-4096"
+            encoder = LongformerModel.from_pretrained(
+                starting_encoder_name,
+                # gradient_checkpointing=hparams.gradient_checkpointing
+            )
+
+            orig_state_dict = encoder.state_dict()
+            checkpoint_prefixed = torch.load(util.get_longformer_science_checkpoint())
+            # New checkpoint
+            new_state_dict = {}
+
+            # Add items from loaded checkpoint.
+            for k, v in checkpoint_prefixed.items():
+                # Don't need the language model head.
+                if "lm_head." in k:
+                    continue
+                # Get rid of the first 8 characters, which say `roberta.`.
+                new_key = k[8:]
+                new_state_dict[new_key] = v
+                
+            # Add items from Huggingface state_dict. These are never used, but
+            # they're needed to make things line up
+            ADD_TO_CHECKPOINT = ["embeddings.position_ids"]
+            for name in ADD_TO_CHECKPOINT:
+                new_state_dict[name] = orig_state_dict[name]
+
+            # Resize embeddings and load state dict.
+            target_embed_size = new_state_dict['embeddings.word_embeddings.weight'].shape[0]
+            encoder.resize_token_embeddings(target_embed_size)
+            encoder.load_state_dict(new_state_dict)
+            encoder.save_pretrained("checkpoints/longformer_science")
+        ###############################################################
+
         encoder = LongformerModel.from_pretrained(
-            starting_encoder_name,
-            gradient_checkpointing=hparams.gradient_checkpointing)
+            "checkpoints/longformer_science",
+            gradient_checkpointing=hparams.gradient_checkpointing,
+            # add_pooling_layer=False
+        )
 
-        orig_state_dict = encoder.state_dict()
-        checkpoint_prefixed = torch.load(util.get_longformer_science_checkpoint())
-
-        # New checkpoint
-        new_state_dict = {}
-        # Add items from loaded checkpoint.
-        for k, v in checkpoint_prefixed.items():
-            # Don't need the language model head.
-            if "lm_head." in k:
-                continue
-            # Get rid of the first 8 characters, which say `roberta.`.
-            new_key = k[8:]
-            new_state_dict[new_key] = v
-
-        # Add items from Huggingface state_dict. These are never used, but
-        # they're needed to make things line up
-        ADD_TO_CHECKPOINT = ["embeddings.position_ids"]
-        for name in ADD_TO_CHECKPOINT:
-            new_state_dict[name] = orig_state_dict[name]
-
-        # Resize embeddings and load state dict.
-        target_embed_size = new_state_dict['embeddings.word_embeddings.weight'].shape[0]
-        encoder.resize_token_embeddings(target_embed_size)
-        encoder.load_state_dict(new_state_dict)
         
-        layers_to_train = [
-            "pooler.dense",
-            "encoder.layer.",
-            # "encoder.layer.10",
-            # "encoder.layer.9",
-            # "encoder.layer.8",
-            # "encoder.layer.7",
-            # "encoder.layer.6",
-            # "encoder.layer.5",
-            # "encoder.layer.4",
-            # "encoder.layer.3",
-            # "encoder.layer.2",
-            # "encoder.layer.1",
-        ]
-        
-        for name, param in encoder.named_parameters():
-            if name.startswith(tuple(layers_to_train)):
-                param.requires_grad = True
-            else:
-                param.requires_grad = False
-
         return encoder
 
     def forward(self, tokenized, abstract_sent_idx):
@@ -227,12 +221,12 @@ class MultiVerSModel(pl.LightningModule):
 
         # Predict rationales.
         # [n_documents x max_n_sentences]
-        rationale_probs = torch.sigmoid(rationale_logits).detach()
+        rationale_probs = torch.sigmoid(rationale_logits.detach())
         predicted_rationales = (rationale_probs >= self.rationale_threshold).to(torch.int64)
 
         # sentences' relavance scores
         # [n_documents x max_n_sentences]
-        relavance_scores = torch.softmax(rationale_logits, dim=-1)
+        relavance_scores = F.softmax(rationale_logits, dim=-1)
 
         # attention over sentence_states
         sentence_att = torch.matmul(relavance_scores.unsqueeze(1), sentence_states).squeeze(1)
@@ -245,7 +239,7 @@ class MultiVerSModel(pl.LightningModule):
         # Predict labels.
         # [n_documents]
 
-        label_probs = F.softmax(label_logits, dim=1).detach()
+        label_probs = F.softmax(label_logits.detach(), dim=1)
         if self.label_threshold is None:
             # If not doing a label threshold, just take the largest.
             predicted_labels = label_logits.argmax(dim=1)

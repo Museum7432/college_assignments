@@ -91,17 +91,6 @@ def parse_args():
     return args
 
 
-from pl.overrides.distributed import LightningDistributedModule
-
-# https://lightning.ai/forums/t/gradient-checkpointing-ddp-nan/398/8
-class CustomDDPPlugin(DDPPlugin):
-    def configure_ddp(self):
-        self.pre_configure_ddp()
-        self._model = self._setup_model(LightningDistributedModule(self.model))
-        self._register_ddp_hooks()
-        self._model._set_static_graph() # THIS IS THE MAGIC LINE
-
-
 def main():
     pl.seed_everything(76)
 
@@ -128,7 +117,7 @@ def main():
     csv_logger = pl_loggers.CSVLogger(
         save_dir=save_dir, name=name, version=version)
 
-    wandb_logger = WandbLogger(project="multivers_sent_att")
+    wandb_logger = WandbLogger(project="multivers_sent_att_fscratch")
 
     loggers = [tb_logger, csv_logger,wandb_logger]
 
@@ -136,22 +125,21 @@ def main():
     checkpoint_callback = callbacks.ModelCheckpoint(
         monitor=args.monitor, mode="max", save_top_k=3, save_last=True,
         dirpath=checkpoint_dir,save_weights_only=True)
+
     lr_callback = callbacks.LearningRateMonitor(logging_interval="step")
     gpu_callback = callbacks.GPUStatsMonitor()
     trainer_callbacks = [checkpoint_callback, lr_callback, gpu_callback]
 
     # DDP pluging fix to keep training from hanging.
     if args.accelerator == "ddp":
-        plugins = CustomDDPPlugin()
+        plugins = DDPPlugin(find_unused_parameters=True)
     else:
         plugins = None
 
     # Create trainer and fit the model.
     # Need `find_unused_paramters=True` to keep training from randomly hanging.
     trainer = pl.Trainer.from_argparse_args(
-        args, callbacks=trainer_callbacks, logger=loggers, plugins=plugins,
-        # ckpt_path=args.starting_checkpoint
-        )
+        args, callbacks=trainer_callbacks, logger=loggers, plugins=plugins)
 
     # If asked to scale the batch size, tune instead of fitting.
     if args.auto_scale_batch_size:
