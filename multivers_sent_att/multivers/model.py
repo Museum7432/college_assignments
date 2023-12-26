@@ -18,6 +18,7 @@ from metrics import SciFactMetrics
 
 import util
 
+import os
 
 def masked_binary_cross_entropy_with_logits(input, target, weight, rationale_mask):
     """
@@ -136,7 +137,7 @@ class MultiVerSModel(pl.LightningModule):
                             help="If given, pass as total # epochs to LR scheduler.")
         parser.add_argument("--label_threshold", default=None, type=float,
                             help="Threshold for non-NEI label.")
-        parser.add_argument("--rationale_threshold", default=0.5, type=float,
+        parser.add_argument("--rationale_threshold", default=0.45, type=float,
                             help="Threshold for rationale.")
 
         return parser
@@ -182,11 +183,25 @@ class MultiVerSModel(pl.LightningModule):
             encoder.save_pretrained("checkpoints/longformer_science")
         ###############################################################
 
+        get_long_pretrained()
+
         encoder = LongformerModel.from_pretrained(
             "checkpoints/longformer_science",
             gradient_checkpointing=hparams.gradient_checkpointing,
             # add_pooling_layer=False
         )
+
+
+        # layers_to_train = [
+        #     "pooler.dense",
+        #     "encoder.layer"
+        # ]
+        
+        # for name, param in encoder.named_parameters():
+        #     if name.startswith(tuple(layers_to_train)):
+        #         param.requires_grad = True
+        #     else:
+        #         param.requires_grad = False
 
         
         return encoder
@@ -217,7 +232,10 @@ class MultiVerSModel(pl.LightningModule):
         rationale_input = torch.cat([pooled_rep, sentence_states], dim=2)
         # Squeeze out dim 2 (the encoder dim).
         # [n_documents x max_n_sentences]
-        rationale_logits = self.rationale_classifier(rationale_input).squeeze(2)
+        rationale_logits_raw = self.rationale_classifier(rationale_input).squeeze(2)
+
+        # testing idea: bringing the probs to near .99 might break sentence_att
+        rationale_logits = - F.relu(- rationale_logits_raw)
 
         # Predict rationales.
         # [n_documents x max_n_sentences]
@@ -226,7 +244,7 @@ class MultiVerSModel(pl.LightningModule):
 
         # sentences' relavance scores
         # [n_documents x max_n_sentences]
-        relavance_scores = F.softmax(rationale_logits, dim=-1)
+        relavance_scores = F.softmax(rationale_logits_raw, dim=-1)
 
         # attention over sentence_states
         sentence_att = torch.matmul(relavance_scores.unsqueeze(1), sentence_states).squeeze(1)
