@@ -2,7 +2,7 @@ pybind11
 nmslib @ git+https://github.com/nmslib/nmslib.git@ade4bcdc9dd3719990de2503871450b8a62df4a5#subdirectory=python_bindings
 pyserini==0.23.0
 faiss-cpu==1.7.4
-torch==2.1.1
+torch==2.1.0
 
 pytorch-lightning==2.1.2
 transformers==4.35.2
@@ -11,3 +11,5 @@ pandas==2.1.3
 streamlit>=1.29.0
 service_streamer>=0.1.2
 st-annotated-text>=4.0.1
+
+underthesea
