@@ -1,0 +1,7 @@
+data
+!data/.gitkeep
+src/__pycache__
+checkpoints
+encoded
+documents
+indexes
