@@ -49,10 +49,10 @@ if "annotated_res" not in st.session_state:
 
 def get_sample_query():
     queries = [
-        "Đặng Anh Đào chưa mất.",
-        "chợ Gò Vấp có từ hơn 100 năm trước",
-        "Bảo tàng Mỹ thuật TP HCM là một trong 31 di tích văn hóa, lịch sử",
-        "Bảo tàng Mỹ thuật TP HCM thu hút hơn 300.000 lượt khách mỗi năm"
+        "TS Đặng Anh Đào chưa mất.",
+        "Lee Sun Kyun bị nghi sử dụng ma túy",
+        "G-Dragon dùng ma túy",
+        "Diễn viên Sam Neill mắc ung thư"
     ]
 
     st.session_state.claim = random.choice(queries)
