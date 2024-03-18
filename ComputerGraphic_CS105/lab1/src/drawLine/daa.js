@@ -1,4 +1,4 @@
-function daa(self, x0, y0, x1, y1, rgba) {
+function daa(x0, y0, x1, y1, rgba) {
     let dx = x1 - x0
     let dy = y1 - y0
     if (dx == 0 || dy == 0) {
@@ -16,7 +16,7 @@ function daa(self, x0, y0, x1, y1, rgba) {
         let y = y0
 
         for (let x = x0; x <= x1; x++) {
-            self.setPixel(x, Math.floor(y + 0.5), rgba)
+            this.setPixel(x, Math.floor(y + 0.5), rgba)
             y = y + k
         }
     }
@@ -31,7 +31,7 @@ function daa(self, x0, y0, x1, y1, rgba) {
         let x = x0
 
         for (let y = y0; y <= y1; y++) {
-            self.setPixel(Math.floor(x + 0.5), y, rgba)
+            this.setPixel(Math.floor(x + 0.5), y, rgba)
             x = x + k
         }
     }

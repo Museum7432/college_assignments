@@ -15,16 +15,22 @@
 
     </div>
 
+    <button id="clear-canvas">clear</button> 
+
     <script type="module">
-        import Painter from "./src/painter.js"
+        import {Painter, mousePainter} from "./src/painter.js"
 
         let p = new Painter("canvas",200, 150)
-        p.drawLine(0, 0, 100, 110, p.lineRgba)
-        p.drawPoint(10,10,p.lineRgba)
 
-        // console.log(p)
+        let mp = new mousePainter(p,1)
+
+        // p.getCanvas().addEventListener("click", console.log)
+
         // console.log(p.getPixelIndex(0,4))
 
+        let clear_button = document.getElementById("clear-canvas")
+
+        clear_button.addEventListener("click", p.clear.bind(p))
     </script>
 </body>
 </html>

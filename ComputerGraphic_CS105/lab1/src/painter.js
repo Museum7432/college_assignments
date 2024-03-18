@@ -21,12 +21,36 @@ class Painter {
         this.canvas = canvas
 
         // (y, x, 4)
-        this.imageData = this.context.getImageData(0, 0, width, height);
+        this.ImageData = this.context.getImageData(0, 0, this.width, this.height)
 
         this.points = []
         this.now = [-1, -1]
 
+        this.daa = daa.bind(this)
+    }
 
+    getImageData(DeepCopy = false) {
+        if (DeepCopy) {
+            return new ImageData(
+                new Uint8ClampedArray(this.ImageData.data),
+                this.ImageData.width,
+                this.ImageData.height
+            )
+        }
+        return this.context.getImageData(0, 0, this.width, this.height)
+    }
+
+    updateCanvas(imgD = this.ImageData, DeepCopy=false) {
+        if (DeepCopy) {
+            imgD = new ImageData(
+                new Uint8ClampedArray(imgD.data),
+                imgD.width,
+                imgD.height
+            )
+        }
+
+        this.ImageData = imgD
+        this.context.putImageData(imgD, 0, 0)
     }
 
     getPixelIndex(x, y) {
@@ -41,7 +65,7 @@ class Painter {
         if (PixelIndex == -1) return
 
         for (let i = 0; i < 4; i++) {
-            this.imageData.data[PixelIndex + i] = rgba[i]
+            this.ImageData.data[PixelIndex + i] = rgba[i]
         }
     }
 
@@ -52,24 +76,97 @@ class Painter {
                 this.setPixel(x + i, y + j, rgba)
             }
         }
-        this.context.putImageData(this.imageData, 0, 0);
+        this.updateCanvas()
     }
 
     drawLine(x0, y0, x1, y1, rgba) {
-        daa(this, x0, y0, x1, y1, rgba)
+        this.daa(x0, y0, x1, y1, rgba)
     }
 
     getPosOnCanvas(x, y) {
         let bbox = this.canvas.getBoundingClientRect();
         return [
-            Math.floor(x - bbox.left * (this.canvas.width / bbox.width) + 0.5),
-            Math.floor(y - bbox.top * (this.canvas.height / bbox.height) + 0.5)
+            Math.floor(x - bbox.left * (this.width / bbox.width) + 0.5),
+            Math.floor(y - bbox.top * (this.height / bbox.height) + 0.5)
         ]
     }
 
-
+    clear(){
+        this.context.clearRect(0, 0, this.width, this.height);
+        this.ImageData = this.context.getImageData(0, 0, this.width, this.height)
+    }
 }
 
-export default Painter
+class mousePainter {
+    tempRgba = [255, 0, 0, 255]
+
+    constructor(painter, painter_callback) {
+        this.painter = painter
+        this.MousePressed = false
+
+        this.painter_callback = painter_callback
+
+        this.painter.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+        this.painter.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
+        this.painter.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+        this.painter.canvas.addEventListener('mouseout', this.onMouseout.bind(this));
+
+    }
+    onMouseDown(e) {
+        // when the cursor is pressed on the canvas
+        if (this.MousePressed) {
+            return
+        }
+        this.MousePressed = true
+        this.pressedPoint = this.painter.getPosOnCanvas(e.clientX, e.clientY)
+        
+        // preserve the current canvas
+        this.tempImageData = this.painter.getImageData()
+    }
+    onMouseUp(e) {
+        // when the cursor is lifted on the canvas
+        if (!this.MousePressed) {
+            return
+        }
+        this.MousePressed = false
+
+        this.painter.updateCanvas(this.tempImageData)
+
+        let liftedPoint = this.painter.getPosOnCanvas(e.clientX, e.clientY)
+
+        // this.painter_callback(this.pressedPoint, liftedPoint)
+        this.painter.drawLine(this.pressedPoint[0], this.pressedPoint[1], liftedPoint[0], liftedPoint[1], this.painter.lineRgba)
+        this.painter.updateCanvas()
+    }
+    onMouseMove(e) {
+        // when the cursor is moved on the canvas
+        if (!this.MousePressed) {
+            return
+        }
+
+        let [x, y] = this.painter.getPosOnCanvas(e.clientX, e.clientY)
+
+        // removed the last guide line
+        this.painter.updateCanvas(this.tempImageData, true)
+
+        // TODO: context is updated twice here
+        this.painter.drawLine(this.pressedPoint[0], this.pressedPoint[1], x, y, this.tempRgba)
+
+        this.painter.updateCanvas()
+    }
+    onMouseout(e) {
+        this.MousePressed = false
+        this.painter.updateCanvas(this.tempImageData)
+    }
+}
+
+
+
+
+
+export {
+    Painter,
+    mousePainter
+}
 
 
