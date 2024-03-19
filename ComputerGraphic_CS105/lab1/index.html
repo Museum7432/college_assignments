@@ -1,36 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CS105 Lab1</title>
-    
+    <style>
+        #main-container{
+            display: flex
+        }
+
+        #canvas-container, #control-container{
+            flex: 50%;
+        }
+
+        #control-container {
+            margin: auto;
+        }
+
+    </style>
 </head>
+
 <body>
 
-    <div id="canvas-container">
-        <canvas id="canvas" style="border:1px solid grey">
+    <div id="main-container">
+        <div id="canvas-container">
+            <canvas id="canvas" style="border:1px solid grey"></canvas>
+        </div>
 
-        </canvas>
+        <div id="control-container">
 
+
+            
+            
+            
+            <form name="select_mode">
+                <legend>drawing algorithms:</legend>
+                <input type="radio" id="algo1" name="algo" value="daa" checked="checked" />
+                <label for="algo1">daa</label>
+                <input type="radio" id="algo2" name="algo" value="bresenham" />
+                <label for="algo2">bresenham</label>
+                <input type="radio" id="algo3" name="algo" value="midpoint" />
+                <label for="algo3">midpoint</label>
+            </form>
+
+            <br>
+
+            <button id="clear-canvas">clear</button>
+
+            <div>
+                <p>cursor location: </p>
+                <p id="cursor-loc"></p>
+                <p>from</p>
+                <p id="start-loc"></p>
+            </div>
+
+        </div>
     </div>
 
-    <button id="clear-canvas">clear</button> 
-
     <script type="module">
-        import {Painter, mousePainter} from "./src/painter.js"
+        import { Painter, EventListenerPainter } from "./src/painter.js"
 
-        let p = new Painter("canvas",200, 150)
+        let p = new Painter("canvas", 800, 800)
 
-        let mp = new mousePainter(p,1)
-
-        // p.getCanvas().addEventListener("click", console.log)
-
-        // console.log(p.getPixelIndex(0,4))
+        let mp = new EventListenerPainter(p)
 
         let clear_button = document.getElementById("clear-canvas")
-
         clear_button.addEventListener("click", p.clear.bind(p))
+
+        if (document.querySelector('input[name="algo"]')) {
+            document.querySelectorAll('input[name="algo"]').forEach((elem) => {
+                elem.addEventListener("change", function (event) {
+                    var item = event.target.value;
+                    p.changeMode(item)
+                });
+            });
+        }
+
+        mp.painter.canvas.addEventListener("mousemove", function (e) {
+            document.getElementById("cursor-loc").innerText = `${e.clientX} ${e.clientY}`
+
+            document.getElementById("start-loc").innerText = `${this.pressedPoint[0]} ${this.pressedPoint[1]}`
+        }.bind(mp))
     </script>
 </body>
+
 </html>

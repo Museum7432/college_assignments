@@ -36,4 +36,5 @@ function daa(x0, y0, x1, y1, rgba) {
         }
     }
 }
+
 export default daa

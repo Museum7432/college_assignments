@@ -1,4 +1,6 @@
-import daa from "./drawLine/daa.js"
+import daa from "./algorithms/daa.js"
+import midpoint from "./algorithms/midpoint.js"
+import bresenham from "./algorithms/bresenham.js"
 
 class Painter {
 
@@ -17,7 +19,7 @@ class Painter {
         canvas.setAttribute("width", width)
         canvas.setAttribute("height", height)
 
-        this.context = canvas.getContext("2d")
+        this.context = canvas.getContext("2d", { willReadFrequently: true })
         this.canvas = canvas
 
         // (y, x, 4)
@@ -27,6 +29,10 @@ class Painter {
         this.now = [-1, -1]
 
         this.daa = daa.bind(this)
+        this.midpoint = midpoint.bind(this)
+        this.bresenham = bresenham.bind(this)
+
+        this.mode = "daa"
     }
 
     getImageData(DeepCopy = false) {
@@ -40,7 +46,7 @@ class Painter {
         return this.context.getImageData(0, 0, this.width, this.height)
     }
 
-    updateCanvas(imgD = this.ImageData, DeepCopy=false) {
+    updateCanvas(imgD = this.ImageData, DeepCopy = false) {
         if (DeepCopy) {
             imgD = new ImageData(
                 new Uint8ClampedArray(imgD.data),
@@ -83,6 +89,17 @@ class Painter {
         this.daa(x0, y0, x1, y1, rgba)
     }
 
+    draw(x0, y0, x1, y1, rgba, mode = this.mode) {
+        if (mode == "daa") {
+            this.daa(x0, y0, x1, y1, rgba)
+        } else if (mode == "midpoint") {
+            let R = Math.round( Math.sqrt((x0 - x1)*(x0 - x1) + (y0 - y1)*(y0 - y1)))
+            this.midpoint(x0, y0, R, rgba)
+        } else if (mode == "bresenham"){
+            this.bresenham(x0, y0, x1, y1, rgba)
+        }
+    }
+
     getPosOnCanvas(x, y) {
         let bbox = this.canvas.getBoundingClientRect();
         return [
@@ -91,25 +108,32 @@ class Painter {
         ]
     }
 
-    clear(){
+    clear() {
         this.context.clearRect(0, 0, this.width, this.height);
         this.ImageData = this.context.getImageData(0, 0, this.width, this.height)
     }
+
+    changeMode(mode){
+        this.mode = mode
+    }
 }
 
-class mousePainter {
+class EventListenerPainter {
     tempRgba = [255, 0, 0, 255]
 
-    constructor(painter, painter_callback) {
+    constructor(painter) {
         this.painter = painter
         this.MousePressed = false
 
-        this.painter_callback = painter_callback
+        this.pressedPoint = [0,0]
+
 
         this.painter.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
         this.painter.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
         this.painter.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
         this.painter.canvas.addEventListener('mouseout', this.onMouseout.bind(this));
+        document.addEventListener('keydown', this.onESC.bind(this));
+
 
     }
     onMouseDown(e) {
@@ -119,7 +143,7 @@ class mousePainter {
         }
         this.MousePressed = true
         this.pressedPoint = this.painter.getPosOnCanvas(e.clientX, e.clientY)
-        
+
         // preserve the current canvas
         this.tempImageData = this.painter.getImageData()
     }
@@ -135,7 +159,7 @@ class mousePainter {
         let liftedPoint = this.painter.getPosOnCanvas(e.clientX, e.clientY)
 
         // this.painter_callback(this.pressedPoint, liftedPoint)
-        this.painter.drawLine(this.pressedPoint[0], this.pressedPoint[1], liftedPoint[0], liftedPoint[1], this.painter.lineRgba)
+        this.painter.draw(this.pressedPoint[0], this.pressedPoint[1], liftedPoint[0], liftedPoint[1], this.painter.lineRgba)
         this.painter.updateCanvas()
     }
     onMouseMove(e) {
@@ -150,13 +174,27 @@ class mousePainter {
         this.painter.updateCanvas(this.tempImageData, true)
 
         // TODO: context is updated twice here
-        this.painter.drawLine(this.pressedPoint[0], this.pressedPoint[1], x, y, this.tempRgba)
+        this.painter.draw(this.pressedPoint[0], this.pressedPoint[1], x, y, this.tempRgba)
 
         this.painter.updateCanvas()
     }
     onMouseout(e) {
-        this.MousePressed = false
-        this.painter.updateCanvas(this.tempImageData)
+        if (this.MousePressed) {
+            this.MousePressed = false
+            this.painter.updateCanvas(this.tempImageData)
+        }
+    }
+
+    onESC(e) {
+        if (!this.MousePressed) {
+            return
+        }
+
+        let keyID = e.keyCode ? e.keyCode : e.which
+        if (keyID == 27) {
+            this.MousePressed = false
+            this.painter.updateCanvas(this.tempImageData)
+        }
     }
 }
 
@@ -166,7 +204,7 @@ class mousePainter {
 
 export {
     Painter,
-    mousePainter
+    EventListenerPainter
 }
 
 
