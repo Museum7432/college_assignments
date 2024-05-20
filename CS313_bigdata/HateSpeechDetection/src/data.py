@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import re
 from torch.utils.data import DataLoader, Dataset, random_split
-from pyvi.ViTokenizer import ViTokenizer
 import emoji
 from transformers import AutoModel, AutoTokenizer
 import torch
