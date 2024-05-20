@@ -1,0 +1,13 @@
+gdown
+numpy
+pandas
+pyvi
+emoji
+torchmetrics==1.2.1
+transformers==4.36.2
+lightning[pytorch-extra]
+service_streamer
+streamlit
+plotly-express
+nbformat
+py_vncorenlp
