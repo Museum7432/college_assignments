@@ -77,15 +77,19 @@ def collate_fn_factory():
 
     return collate_fn
 
+
 def loaddicchar():
     dic = {}
-    char1252 = 'à|á|ả|ã|ạ|ầ|ấ|ẩ|ẫ|ậ|ằ|ắ|ẳ|ẵ|ặ|è|é|ẻ|ẽ|ẹ|ề|ế|ể|ễ|ệ|ì|í|ỉ|ĩ|ị|ò|ó|ỏ|õ|ọ|ồ|ố|ổ|ỗ|ộ|ờ|ớ|ở|ỡ|ợ|ù|ú|ủ|ũ|ụ|ừ|ứ|ử|ữ|ự|ỳ|ý|ỷ|ỹ|ỵ|À|Á|Ả|Ã|Ạ|Ầ|Ấ|Ẩ|Ẫ|Ậ|Ằ|Ắ|Ẳ|Ẵ|Ặ|È|É|Ẻ|Ẽ|Ẹ|Ề|Ế|Ể|Ễ|Ệ|Ì|Í|Ỉ|Ĩ|Ị|Ò|Ó|Ỏ|Õ|Ọ|Ồ|Ố|Ổ|Ỗ|Ộ|Ờ|Ớ|Ở|Ỡ|Ợ|Ù|Ú|Ủ|Ũ|Ụ|Ừ|Ứ|Ử|Ữ|Ự|Ỳ|Ý|Ỷ|Ỹ|Ỵ'.split(
-        '|')
+    char1252 = "à|á|ả|ã|ạ|ầ|ấ|ẩ|ẫ|ậ|ằ|ắ|ẳ|ẵ|ặ|è|é|ẻ|ẽ|ẹ|ề|ế|ể|ễ|ệ|ì|í|ỉ|ĩ|ị|ò|ó|ỏ|õ|ọ|ồ|ố|ổ|ỗ|ộ|ờ|ớ|ở|ỡ|ợ|ù|ú|ủ|ũ|ụ|ừ|ứ|ử|ữ|ự|ỳ|ý|ỷ|ỹ|ỵ|À|Á|Ả|Ã|Ạ|Ầ|Ấ|Ẩ|Ẫ|Ậ|Ằ|Ắ|Ẳ|Ẵ|Ặ|È|É|Ẻ|Ẽ|Ẹ|Ề|Ế|Ể|Ễ|Ệ|Ì|Í|Ỉ|Ĩ|Ị|Ò|Ó|Ỏ|Õ|Ọ|Ồ|Ố|Ổ|Ỗ|Ộ|Ờ|Ớ|Ở|Ỡ|Ợ|Ù|Ú|Ủ|Ũ|Ụ|Ừ|Ứ|Ử|Ữ|Ự|Ỳ|Ý|Ỷ|Ỹ|Ỵ".split(
+        "|"
+    )
     charutf8 = "à|á|ả|ã|ạ|ầ|ấ|ẩ|ẫ|ậ|ằ|ắ|ẳ|ẵ|ặ|è|é|ẻ|ẽ|ẹ|ề|ế|ể|ễ|ệ|ì|í|ỉ|ĩ|ị|ò|ó|ỏ|õ|ọ|ồ|ố|ổ|ỗ|ộ|ờ|ớ|ở|ỡ|ợ|ù|ú|ủ|ũ|ụ|ừ|ứ|ử|ữ|ự|ỳ|ý|ỷ|ỹ|ỵ|À|Á|Ả|Ã|Ạ|Ầ|Ấ|Ẩ|Ẫ|Ậ|Ằ|Ắ|Ẳ|Ẵ|Ặ|È|É|Ẻ|Ẽ|Ẹ|Ề|Ế|Ể|Ễ|Ệ|Ì|Í|Ỉ|Ĩ|Ị|Ò|Ó|Ỏ|Õ|Ọ|Ồ|Ố|Ổ|Ỗ|Ộ|Ờ|Ớ|Ở|Ỡ|Ợ|Ù|Ú|Ủ|Ũ|Ụ|Ừ|Ứ|Ử|Ữ|Ự|Ỳ|Ý|Ỷ|Ỹ|Ỵ".split(
-        '|')
+        "|"
+    )
     for i in range(len(char1252)):
         dic[char1252[i]] = charutf8[i]
     return dic
+
 
 # coding=utf-8
 # Copyright (c) 2021 VinAI Research
@@ -136,18 +140,18 @@ dict_map = {
     "ụy": "uỵ",
     "Ụy": "Uỵ",
     "ỤY": "UỴ",
-    }
+}
+
 
 def VietnameseToneNormalization(text):
     for i, j in dict_map.items():
         text = text.replace(i, j)
     return text
 
+
 class WORKSPACE:
-    def __init__(self, dataset_dir=None):
+    def __init__(self, dataset_dir="./dataset"):
         # download data to the dataset folder
-        if dataset_dir is None:
-            dataset_dir = "./dataset"
 
         os.makedirs(dataset_dir, exist_ok=True)
 
@@ -158,7 +162,8 @@ class WORKSPACE:
             ["vietnamese-stopwords-dash.txt", "1CAWxF85YgT-S3N9_1AnLGgSbXaBjls7G"],
             ["vietnamese_stopwords.txt", "1wyQh4amy87iT4Wiuer8_S4t27geboEpD"],
             ["teencode.txt", "1ucJiBxFQqksMVFhguIGrE26yeDg5CSXc"],
-            ["phobertCNN.ckpt", "1hKfQrl0vrEo3kKVsCHCHQeKRfWPfqniD"]
+            ["phobertCNN.ckpt", "1mIa43j3S7--Hp3aBG2BSDNwGPd8UgTCx"],
+            ["phobert.ckpt", "1nsg3je-fTIL5twLWi0m36DoVAKZDph1e"],
         ]
 
         self.files_path = {}
@@ -233,10 +238,10 @@ class WORKSPACE:
 
     def convert_unicode(self, txt):
         return re.sub(
-            r'à|á|ả|ã|ạ|ầ|ấ|ẩ|ẫ|ậ|ằ|ắ|ẳ|ẵ|ặ|è|é|ẻ|ẽ|ẹ|ề|ế|ể|ễ|ệ|ì|í|ỉ|ĩ|ị|ò|ó|ỏ|õ|ọ|ồ|ố|ổ|ỗ|ộ|ờ|ớ|ở|ỡ|ợ|ù|ú|ủ|ũ|ụ|ừ|ứ|ử|ữ|ự|ỳ|ý|ỷ|ỹ|ỵ|À|Á|Ả|Ã|Ạ|Ầ|Ấ|Ẩ|Ẫ|Ậ|Ằ|Ắ|Ẳ|Ẵ|Ặ|È|É|Ẻ|Ẽ|Ẹ|Ề|Ế|Ể|Ễ|Ệ|Ì|Í|Ỉ|Ĩ|Ị|Ò|Ó|Ỏ|Õ|Ọ|Ồ|Ố|Ổ|Ỗ|Ộ|Ờ|Ớ|Ở|Ỡ|Ợ|Ù|Ú|Ủ|Ũ|Ụ|Ừ|Ứ|Ử|Ữ|Ự|Ỳ|Ý|Ỷ|Ỹ|Ỵ',
-            lambda x: self.dicchar[x.group()], txt)
-    
-    
+            r"à|á|ả|ã|ạ|ầ|ấ|ẩ|ẫ|ậ|ằ|ắ|ẳ|ẵ|ặ|è|é|ẻ|ẽ|ẹ|ề|ế|ể|ễ|ệ|ì|í|ỉ|ĩ|ị|ò|ó|ỏ|õ|ọ|ồ|ố|ổ|ỗ|ộ|ờ|ớ|ở|ỡ|ợ|ù|ú|ủ|ũ|ụ|ừ|ứ|ử|ữ|ự|ỳ|ý|ỷ|ỹ|ỵ|À|Á|Ả|Ã|Ạ|Ầ|Ấ|Ẩ|Ẫ|Ậ|Ằ|Ắ|Ẳ|Ẵ|Ặ|È|É|Ẻ|Ẽ|Ẹ|Ề|Ế|Ể|Ễ|Ệ|Ì|Í|Ỉ|Ĩ|Ị|Ò|Ó|Ỏ|Õ|Ọ|Ồ|Ố|Ổ|Ỗ|Ộ|Ờ|Ớ|Ở|Ỡ|Ợ|Ù|Ú|Ủ|Ũ|Ụ|Ừ|Ứ|Ử|Ữ|Ự|Ỳ|Ý|Ỷ|Ỹ|Ỵ",
+            lambda x: self.dicchar[x.group()],
+            txt,
+        )
 
     def preprocess_text(
         self,
@@ -258,7 +263,7 @@ class WORKSPACE:
 
         if lowercased:
             texts = [s.lower() for s in texts]
-        
+
         if word_segmentation:
             texts = self.word_segmentation(texts)
 
@@ -298,7 +303,7 @@ class WORKSPACE:
         tmp_texts, tmp_labels = self._load_file(
             file_path=fn,
             has_label=hl,
-            word_segmentation=False, # the dataset have already been word segmented
+            word_segmentation=False,  # the dataset have already been word segmented
             word_segmented_stop_word=True,
             **preprocess_args
         )
@@ -325,3 +330,6 @@ class WORKSPACE:
             shuffle=shuffle,
             num_workers=num_workers,
         )
+
+
+workspace = WORKSPACE()

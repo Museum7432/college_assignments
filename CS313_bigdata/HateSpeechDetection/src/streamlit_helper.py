@@ -6,13 +6,14 @@ import torch
 
 
 @st.cache_resource
-def get_predict_fc(checkpoint_path, device, batch_size):
-    mo = model_wrapper(
+def get_predict_fc(checkpoint_path, device, batch_size, mtype="phoBert_CNN"):
+    model = model_wrapper(
         checkpoint_path=checkpoint_path,
-        device=device
+        device=device,
+        mtype=mtype
     )
 
-    streamer = ThreadedStreamer(mo.predict, batch_size=batch_size, max_latency=0.1)
+    streamer = ThreadedStreamer(model.predict, batch_size=batch_size, max_latency=0.1)
 
     @st.cache_data
     def predict_fc(texts):

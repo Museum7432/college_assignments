@@ -9,67 +9,19 @@ import torchmetrics
 
 from transformers.optimization import get_linear_schedule_with_warmup
 
-class phoBert_CNN(L.LightningModule):
+
+class Base(L.LightningModule):
     def __init__(self, output_dim=3, lr = 5e-5):
         super().__init__()
         self.lr = lr
-        self.phobert = AutoModel.from_pretrained("vinai/phobert-base-v2")
-
-        embedding_dim = self.phobert.embeddings.word_embeddings.embedding_dim
-
-        region_sizes = [1, 2, 3, 5]
-        n_filters = 32
-
-        self.fc_input = nn.Linear(embedding_dim, embedding_dim)
-
-        convs = []
-        for s in region_sizes:
-            convs.append(
-                nn.Conv1d(
-                    in_channels=embedding_dim,
-                    out_channels=n_filters,
-                    kernel_size=s,
-                )
-            )
-        self.convs = nn.ModuleList(convs)
-
-        self.fc = nn.Linear(len(region_sizes) * n_filters, output_dim)
-
-        self.dropout = nn.Dropout(0.1)
-
+        self.output_dim = output_dim
+        
         self.valid_f1 = torchmetrics.classification.F1Score(
             task="multiclass", num_classes=output_dim
         )
     
     def forward(self, input_ids, attention_mask=None):
-        # batch_size, seq_len, embedding_size
-        encoded = self.phobert(
-            input_ids=input_ids, attention_mask=attention_mask
-        ).last_hidden_state
-
-        encoded = F.relu(self.fc_input(encoded))
-
-        # batch_size, embedding_size, seq_len
-        encoded = encoded.permute(0, 2, 1)
-
-        convoluted = []
-        for conv in self.convs:
-            # batch_size, 32, seq_len - kernel_size + 1
-            c = F.relu(conv(encoded))
-
-            # extract sentence level representation
-            # batch_size, 32
-            c = c.max(-1).values
-
-            convoluted.append(c)
-        
-        # batch_size, 32 * len(self.convs)
-        convoluted = self.dropout(torch.hstack(convoluted))
-
-        # batch_size, 3
-        logits =  self.fc(convoluted)
-
-        return logits
+        raise NotImplementedError
 
     def calc_loss(self, logits, label):
 
@@ -133,3 +85,88 @@ class phoBert_CNN(L.LightningModule):
         )
 
         return [self.optimizer], [{"scheduler": self.lr_scheduler, "interval": "step"}]
+
+
+class phoBert_CNN(Base):
+    def __init__(self, output_dim=3, lr = 5e-5):
+        super().__init__(output_dim=output_dim, lr = lr)
+
+        self.phobert = AutoModel.from_pretrained("vinai/phobert-base-v2", add_pooling_layer=False)
+
+        embedding_dim = self.phobert.embeddings.word_embeddings.embedding_dim
+
+        region_sizes = [1, 2, 3, 5]
+        n_filters = 32
+
+        self.fc_input = nn.Linear(embedding_dim, embedding_dim)
+
+        convs = []
+        for s in region_sizes:
+            convs.append(
+                nn.Conv1d(
+                    in_channels=embedding_dim,
+                    out_channels=n_filters,
+                    kernel_size=s,
+                )
+            )
+        self.convs = nn.ModuleList(convs)
+
+        self.classifier = nn.Linear(len(region_sizes) * n_filters, output_dim)
+
+        self.dropout = nn.Dropout(0.1)
+    
+    def forward(self, input_ids, attention_mask=None):
+        # batch_size, seq_len, embedding_size
+        encoded = self.phobert(
+            input_ids=input_ids, attention_mask=attention_mask
+        ).last_hidden_state
+
+        encoded = F.relu(self.fc_input(encoded))
+
+        # batch_size, embedding_size, seq_len
+        encoded = encoded.permute(0, 2, 1)
+
+        convoluted = []
+        for conv in self.convs:
+            # batch_size, 32, seq_len - kernel_size + 1
+            c = F.relu(conv(encoded))
+
+            # extract sentence level representation
+            # batch_size, 32
+            c = c.max(-1).values
+
+            convoluted.append(c)
+        
+        # batch_size, 32 * len(self.convs)
+        convoluted = self.dropout(torch.hstack(convoluted))
+
+        # batch_size, 3
+        logits =  self.classifier(convoluted)
+
+        return logits
+
+class phoBert(Base):
+    def __init__(self, output_dim=3, lr = 5e-5, model_id="vinai/phobert-base-v2"):
+        super().__init__(output_dim=output_dim, lr = lr)
+
+        self.phobert = AutoModel.from_pretrained(model_id)
+
+        embedding_dim = self.phobert.embeddings.word_embeddings.embedding_dim
+
+        self.classifier = nn.Linear(embedding_dim, output_dim)
+
+        self.dropout = nn.Dropout(0.1)
+    
+    def forward(self, input_ids, attention_mask=None):
+        # batch_size, seq_len, embedding_size
+        encoded = self.phobert(
+            input_ids=input_ids, attention_mask=attention_mask
+        )
+        pooled_output = encoded["pooler_output"]
+
+
+        logits = self.classifier(pooled_output)
+
+        return logits
+
+

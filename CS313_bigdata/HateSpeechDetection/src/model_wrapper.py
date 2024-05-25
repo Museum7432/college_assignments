@@ -1,5 +1,5 @@
-from .data import WORKSPACE, collate_fn_factory
-from .model import phoBert_CNN
+from .data import workspace, collate_fn_factory
+from .model import phoBert_CNN, phoBert
 from transformers import AutoModel, AutoTokenizer
 from torch.nn import functional as F
 import numpy as np
@@ -7,13 +7,16 @@ import torch
 
 
 class model_wrapper:
-    def __init__(self, checkpoint_path=None, device="cuda"):
-        self.workspace = WORKSPACE()
+    def __init__(self, mtype="phoBert_CNN", checkpoint_path=None, device="cuda"):
+        self.workspace = workspace
+        self.mtype = mtype
+        
+        MODEL = phoBert_CNN if mtype=="phoBert_CNN" else phoBert
 
         if checkpoint_path is None:
-            checkpoint_path = self.workspace.files_path["phobertCNN.ckpt"]
+            checkpoint_path = self.workspace.files_path["phobertCNN.ckpt"] if mtype=="phoBert_CNN" else self.workspace.files_path["phobert.ckpt"]
 
-        model = phoBert_CNN.load_from_checkpoint(
+        model = MODEL.load_from_checkpoint(
             checkpoint_path=checkpoint_path, map_location=device
         )
 
