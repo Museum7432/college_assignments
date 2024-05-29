@@ -37,4 +37,7 @@ def get_args():
 
     args["device"] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    if args["cuda"]:
+        args["device"] = "cuda"
+
     return args
